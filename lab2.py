@@ -230,8 +230,8 @@ def find_best_work(use_cuda):
 
     data_set = get_train_dataset()
     device = torch.device("cpu") if not use_cuda else torch.device("cuda:0")
+    # print(device)
     model = ResNet18(num_classes=10).to(device)
-    summary(model, input_size=INPUT_SIZE)
     criterion = nn.CrossEntropyLoss()
 
     optimizer = optim.SGD(
@@ -254,6 +254,7 @@ def find_best_work(use_cuda):
         work_time[work] = d_time
         if d_time < best_time:
             best_work, best_time = work, d_time
+        print(f"num_work={work}, time={t_time}")
     """
     draw the results in a graph to illustrate the performance you are getting as you
     increase the number of workers. Report how many workers are needed for the best runtime
@@ -269,6 +270,7 @@ def main():
     num_workers = args.num_workers
     epochs = args.epochs
     device = torch.device("cuda" if use_cuda else "cpu")
+    print(device)
     data_set = get_train_dataset()
     train_loader = DataLoader(
         data_set, batch_size=128, shuffle=True,
@@ -276,15 +278,15 @@ def main():
     )
     model = ResNet18(num_classes=10).to(device)
 
-    summary(model, input_size=INPUT_SIZE)
+    summary(model, input_size=INPUT_SIZE, device=str(device))
     criterion = nn.CrossEntropyLoss()
 
     # def set_optimizer(model: ResNet18,opt: str,lr: float=0.1,momentum: float=0.9,weight_decay: float=5e-4)
-    optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay)
+    # optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay)
 
-    print(f"\nBegin Training, Optimizer {optimizer}")
-    print(f"{'Epoch':<6} | {'Loss':<8} | {'Acc (%)':<8} | {'Data Time':<10} | {'Train Time':<10}")
-    print("-" * 60)
+    # print(f"\nBegin Training, Optimizer {optimizer}")
+    # print(f"{'Epoch':<6} | {'Loss':<8} | {'Acc (%)':<8} | {'Data Time':<10} | {'Train Time':<10}")
+    # print("-" * 60)
 
     best_work, best_time = find_best_work(use_cuda)
 
