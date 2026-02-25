@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# use python -m pip to guarantee correct environment
 echo "Installing uv into this Python environment..."
-python3 -m pip install uv
+python3 -m pip install --user uv
 
-# Add user local bin to PATH so uv can be found
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
-
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
 echo "Using PATH = $PATH"
 
 echo "Running lab2..."
-uv run lab2.py "$@"
+exec uv run lab2.py "$@"
