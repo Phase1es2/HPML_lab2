@@ -256,12 +256,13 @@ def find_best_work(use_cuda):
         work_time[work] = d_time
         if d_time < best_time:
             best_work, best_time = work, d_time
-        print(f"num_work={work}, time={t_time}")
+        print(f"num_work={work}, time={d_time}")
     """
     draw the results in a graph to illustrate the performance you are getting as you
     increase the number of workers. Report how many workers are needed for the best runtime
     performance.
     """
+    print(f"best_work={best_work}, time={best_time}")
     plot_results(work_list, work_time)
     return best_work, best_time
 
