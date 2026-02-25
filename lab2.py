@@ -277,7 +277,7 @@ def main():
     data_set = get_train_dataset()
     train_loader = DataLoader(
         data_set, batch_size=128, shuffle=True,
-        num_workers=num_workers, pin_memory=True if use_cuda else False
+        num_workers=8, pin_memory=True if use_cuda else False
     )
     model = ResNet18(num_classes=10).to(device)
 
@@ -285,14 +285,18 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     # def set_optimizer(model: ResNet18,opt: str,lr: float=0.1,momentum: float=0.9,weight_decay: float=5e-4)
-    # optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay)
+    optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay)
 
-    # print(f"\nBegin Training, Optimizer {optimizer}")
-    # print(f"{'Epoch':<6} | {'Loss':<8} | {'Acc (%)':<8} | {'Data Time':<10} | {'Train Time':<10}")
-    # print("-" * 60)
+    # best_work, best_time = find_best_work(use_cuda)
+    # best_work, 8
 
-    best_work, best_time = find_best_work(use_cuda)
+    print(f"\nBegin Training, Optimizer {optimizer}, Device {device}")
+    print(f"{'Epoch':<6} | {'Loss':<8} | {'Acc (%)':<8} | {'Data Time':<10} | {'Train Time':<10}")
+    print("-" * 60)
 
-    # loss, acc, d_time, t_time = train_one_epoch(model, train_loader, optimizer, criterion, device)
+    for epoch in range(1, 5 + 1):
+        loss, acc, d_time, t_time = train_one_epoch(model, train_loader, optimizer, criterion, device)
+        print(f"{epoch:<6} | " f"{loss:<10.4f} | " f"{acc:<10.2f} | " f"{d_time:<12.4f} | " f"{t_time:<12.4f}")
+
 if __name__ == '__main__':
     main()
