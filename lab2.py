@@ -9,6 +9,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torchsummary import summary
+import multiprocessing
 
 from c3_io_optimization import get_train_dataset, plot_results
 from prog import get_parser
@@ -227,7 +228,7 @@ starting from zero and increment the number of workers by 4 (0, 4, 8, 12, 16) ut
 does not decrease anymore. 
 """
 def find_best_work(use_cuda):
-
+    max_workers: int = int(multiprocessing.cpu_count())
     data_set = get_train_dataset()
     device = torch.device("cpu") if not use_cuda else torch.device("cuda:0")
     # print(device)
@@ -243,9 +244,10 @@ def find_best_work(use_cuda):
         )
 
     work_time: dict[int, float] = {}
-    work_list: List[int] = [0, 4, 8, 12, 16, 20]
+    work_list: List[int] = []
     best_work, best_time = 0, float('inf')
-    for work in work_list:
+    for work in range(0, max_workers + 1, 4):
+        work_list.append(work)
         train_loader = DataLoader(
             data_set, batch_size=128, shuffle=True,
             num_workers=work, pin_memory=True if use_cuda else False
