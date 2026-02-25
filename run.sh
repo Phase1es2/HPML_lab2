@@ -9,7 +9,5 @@ export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
 echo "Using PATH = $PATH"
 
-uv run lab2.py "$@"
-
 echo "Running lab2..."
 uv run lab2.py "$@"
