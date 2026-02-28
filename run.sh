@@ -14,4 +14,4 @@ fi
 echo "Using PATH = $PATH"
 
 echo "Running lab2..."
-exec uv run lab2.py "$@"
+uv run lab2.py "$@"

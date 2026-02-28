@@ -227,7 +227,7 @@ C3.1 Report the total time spent for the Dataloader varying the number of the wo
 starting from zero and increment the number of workers by 4 (0, 4, 8, 12, 16) util the I/O time
 does not decrease anymore. 
 """
-def find_best_work(use_cuda):
+def find_best_work(use_cuda: bool) -> tuple[int, float]:
     max_workers: int = int(multiprocessing.cpu_count())
     data_set = get_train_dataset()
     device = torch.device("cpu") if not use_cuda else torch.device("cuda:0")
@@ -245,13 +245,17 @@ def find_best_work(use_cuda):
 
     work_time: dict[int, float] = {}
     work_list: List[int] = []
-    best_work, best_time = 0, float('inf')
+    best_work: int  = 0
+    best_time: float = float('inf')
     for work in range(0, max_workers + 1, 4):
         work_list.append(work)
         train_loader = DataLoader(
             data_set, batch_size=128, shuffle=True,
             num_workers=work, pin_memory=True if use_cuda else False
         )
+        # this is for warm up
+        train_one_epoch(model, train_loader, optimizer, criterion, device)
+
         loss, acc, d_time, t_time = train_one_epoch(model, train_loader, optimizer, criterion, device)
         work_time[work] = d_time
         if d_time < best_time:
@@ -287,9 +291,10 @@ def main():
     # def set_optimizer(model: ResNet18,opt: str,lr: float=0.1,momentum: float=0.9,weight_decay: float=5e-4)
     optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay)
 
-    # best_work, best_time = find_best_work(use_cuda)
+    best_work, best_time = find_best_work(use_cuda)
     # best_work, 8
 
+    """
     print(f"\nBegin Training, Optimizer {optimizer}, Device {device}")
     print(f"{'Epoch':<6} | {'Loss':<8} | {'Acc (%)':<8} | {'Data Time':<10} | {'Train Time':<10}")
     print("-" * 60)
@@ -297,6 +302,6 @@ def main():
     for epoch in range(1, 5 + 1):
         loss, acc, d_time, t_time = train_one_epoch(model, train_loader, optimizer, criterion, device)
         print(f"{epoch:<6} | " f"{loss:<10.4f} | " f"{acc:<10.2f} | " f"{d_time:<12.4f} | " f"{t_time:<12.4f}")
-
+    """
 if __name__ == '__main__':
     main()
