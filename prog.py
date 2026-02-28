@@ -3,6 +3,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument("--opt", type=str, default="sgd", choices=["sgd", "adam", "adagrad", "adadelta", "adamw", "rmsprop"], help="optimizer")
+    parser.add_argument("--nesterov", action="store_true", help="Use Nesterov momentum (SGD only)") # for sgd only
     parser.add_argument("--epochs", type=int, default=5, help="number of epochs")
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--weight_decay", type=float, default=5e-4, help="weight decay")

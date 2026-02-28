@@ -117,7 +117,7 @@ def train_one_epoch(model, train_loader, optimizer, criterion, device):
     total_data_time, total_train_time = 0.0, 0.0
 
     start_step_time = time.perf_counter()
-
+    print(f"[INFO] DataLoader workers: {train_loader.num_workers}")
     pbar = tqdm(train_loader, desc="Training", unit="batch", leave=False)
     printed = False
     for inputs, labels in pbar:
@@ -141,10 +141,10 @@ def train_one_epoch(model, train_loader, optimizer, criterion, device):
             print(f"Gradient elements: {total_grads}")
             printed = True
         optimizer.step()
-        """
+
         if device.type =='cuda':
             torch.cuda.synchronize()
-        """
+
         if device.type == 'mps':
             torch.mps.synchronize()
 
@@ -177,15 +177,17 @@ def set_optimizer(
         opt: str,
         lr: float=0.1,
         momentum: float=0.9,
-        weight_decay: float=5e-4
+        weight_decay: float=5e-4,
+        nesterov: bool=False,
 ) -> optim.Optimizer:
+    args = get_parser().parse_args()
     if opt == "sgd":
         return optim.SGD(
             model.parameters(),
             lr=lr,
             momentum=momentum,
             weight_decay=weight_decay,
-            nesterov=True,
+            nesterov=nesterov,
         )
     elif opt == "adam":
         return optim.Adam(
@@ -233,6 +235,7 @@ def find_best_work(use_cuda: bool) -> tuple[int, float]:
     device = torch.device("cpu") if not use_cuda else torch.device("cuda:0")
     # print(device)
     model = ResNet18(num_classes=10).to(device)
+
     criterion = nn.CrossEntropyLoss()
 
     optimizer = optim.SGD(
@@ -289,11 +292,9 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     # def set_optimizer(model: ResNet18,opt: str,lr: float=0.1,momentum: float=0.9,weight_decay: float=5e-4)
-    optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay)
+    optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay, args.nesterov)
 
     best_work, best_time = find_best_work(use_cuda)
-    # best_work, 8
-
     """
     print(f"\nBegin Training, Optimizer {optimizer}, Device {device}")
     print(f"{'Epoch':<6} | {'Loss':<8} | {'Acc (%)':<8} | {'Data Time':<10} | {'Train Time':<10}")
