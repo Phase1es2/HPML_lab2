@@ -8,6 +8,8 @@ import multiprocessing
 from matplotlib import pyplot as plt
 from torch import nn, optim
 from torch.utils.data import DataLoader
+from tqdm import tqdm
+
 from lab2_data import get_train_dataset
 from model import ResNet18
 from train import train_one_epoch
@@ -165,7 +167,7 @@ def benchmark_latency(model, device, input_size=(1, 3, 32, 32), num_runs=100):
     #Latency
     start_time = time.perf_counter()
     with torch.no_grad():
-        for _ in range(num_runs):
+        for _ in tqdm(range(num_runs), desc=f"Benchmarking on {device}", leave=False):
             _ = model(dummy_input)
             if device.type == "cuda":
                 torch.cuda.synchronize()
