@@ -21,11 +21,18 @@ def main():
         except (RuntimeError, FileNotFoundError) as e:
             print(f"Error loading TorchScript model from path {MODEL_PATH}: {e}")
             return
+
+        print("=" * 60)
+        print(f"✓ Successfully loaded TorchScript model from: {MODEL_PATH}")
+        print(f"✓ Evaluation device: {device}")
+        print("=" * 60)
+
         test_data_set = get_test_dataset()
         test_loader = DataLoader(
             test_data_set, batch_size=args.batch_size, shuffle=False,
             num_workers=args.num_workers, pin_memory=True if use_cuda else False
         )
+
         correct, total = 0, 0
 
         with torch.no_grad():
