@@ -52,8 +52,6 @@ def main():
     if args.best_worker:
         best_work, best_time = find_best_work(use_cuda)
     else:
-        num_workers = args.num_workers
-        epochs = args.epochs
         device = torch.device("cuda" if use_cuda else "cpu")
         data_set = get_train_dataset()
         train_loader = DataLoader(

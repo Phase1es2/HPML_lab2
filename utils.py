@@ -29,6 +29,8 @@ def get_parser():
     parser.add_argument("--num_workers", type=int, default=0, help="number of data loading workers")
     parser.add_argument("--best_worker", action="store_true", help="call find best work function")
     parser.add_argument("--no_batch", action="store_true", help="do not use a batch norm during training")
+    parser.add_argument("--eval", action="store_true", help="evaluate the model")
+    parser.add_argument("--converting", type=str, default="scripting", choices=["scripting", "tracing"], help="converting")
     return parser
 
 
@@ -98,7 +100,7 @@ def plot_best_work_results(workers_list: List[int], results: Dict[int, float]) -
 This part handle optimizer based on user's input
 """
 def set_optimizer(
-        model: ResNet18,
+        model: nn.Module,
         opt: str,
         lr: float=0.1,
         momentum: float=0.9,
