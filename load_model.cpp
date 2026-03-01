@@ -10,9 +10,9 @@ int main(int argc, const char* argv[]) {
 
     torch::jit::script::Module module;
     try {
-        module = torch::jit::load(argv[1]);
+        module = torch::jit::load(argv[1], torch::kCPU);
     } catch (const c10::Error& e) {
-        std::cerr << "Error loading the model\n";
+        std::cerr << "Error loading the model\n" << e.what() << "\n";
         return -1;
     }
     std::cout << "Model Loaded Successfully\n";
