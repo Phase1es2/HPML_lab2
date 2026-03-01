@@ -1,4 +1,5 @@
 import argparse
+import time
 from typing import List, Dict
 
 import torch
@@ -31,6 +32,7 @@ def get_parser():
     parser.add_argument("--no_batch", action="store_true", help="do not use a batch norm during training")
     parser.add_argument("--eval", action="store_true", help="evaluate the model")
     parser.add_argument("--converting", type=str, default="scripting", choices=["scripting", "tracing"], help="converting")
+    parser.add_argument("--latency", action="store_true", help="evaluate the model latency")
     return parser
 
 
@@ -148,3 +150,27 @@ def set_optimizer(
         )
     else:
         raise ValueError(f"Unknown optimizer: {opt}")
+
+
+def benchmark_latency(model, device, input_size=(1, 3, 32, 32), num_runs=100):
+    model.eval()
+    dummy_input = torch.randn(*input_size).to(device)
+
+    # warm up
+    for _ in range(10):
+        _ = model(dummy_input)
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+
+    #Latency
+    start_time = time.perf_counter()
+    with torch.no_grad():
+        for _ in range(num_runs):
+            _ = model(dummy_input)
+            if device.type == "cuda":
+                torch.cuda.synchronize()
+    end_time = time.perf_counter()
+
+    avg_latency = ((end_time - start_time) / num_runs) * 1000 # in milliseconds
+
+    return avg_latency

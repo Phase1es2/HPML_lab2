@@ -3,9 +3,10 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 from lab2_data import get_train_dataset, get_test_dataset
+from model import ResNet18
 from model_jit import ResNet18JIT, ResNet18NoBNJIT
 from train import train_one_epoch
-from utils import get_parser, set_optimizer
+from utils import get_parser, set_optimizer, benchmark_latency
 from torchsummary import summary
 
 MODEL_PATH = "best_model_jit.pt"
@@ -39,6 +40,17 @@ def main():
         top1_acc = 100. * correct / total
         print("Accuracy: {:.2f}%".format(top1_acc))
         return
+    if args.latency:
+        original_model = ResNet18(num_classes=10).to(device)
+        try:
+            ts_model = torch.jit.load(MODEL_PATH).to(device)
+        except (RuntimeError, FileNotFoundError) as e:
+            print(f"Error loading TorchScript model from path {MODEL_PATH}: {e}")
+            return
+        latency_org = benchmark_latency(original_model, device)
+        latency_ts = benchmark_latency(ts_model, device)
+        speedup = latency_org / latency_ts
+        print("Speedup: {:.2f}%".format(speedup))
     else:
         data_set = get_train_dataset()
         train_loader = DataLoader(

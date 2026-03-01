@@ -15,3 +15,7 @@ data
 *.DS_Store
 
 *.pt
+
+build/
+
+libtorch/
