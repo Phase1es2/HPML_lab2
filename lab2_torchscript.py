@@ -57,6 +57,8 @@ def main():
         latency_org = benchmark_latency(original_model, device)
         latency_ts = benchmark_latency(ts_model, device)
         speedup = latency_org / latency_ts
+        print(f"PyTorch latency on {'GPU' if use_cuda else 'CPU'}: {latency_org:.2f} ms")
+        print(f"TorchScript latency on {'GPU' if use_cuda else 'CPU'}: {latency_ts:.2f} ms")
         print("Speedup: {:.2f}%".format(speedup))
     else:
         data_set = get_train_dataset()
