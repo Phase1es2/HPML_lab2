@@ -45,4 +45,4 @@ make -j
 
 echo "Build done. Running inference with TorchScript model..."
 
-./my_torch_app ../best_model_jit.pt
+./resnet_18 ../best_model_jit.pt
