@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
-set -e  # 任何一步錯誤就停
+set -e  # stop on any error
 
 echo "Installing C++ Distributions of PyTorch"
 
-# HPML_folder
-cd ..
+# --- Always work relative to this script's location (repo root) ---
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
 
-#  libtorch
-if [ ! -d "libtorch" ]; then
-  mkdir -p libtorch_downloads
-  cd libtorch_downloads
+# libtorch will be placed one level above repo root (same as your original cd .. behavior)
+PARENT_DIR="$(cd "$ROOT_DIR/.." && pwd)"
+
+# --- Download/prepare libtorch ---
+if [ ! -d "$PARENT_DIR/libtorch" ]; then
+  mkdir -p "$PARENT_DIR/libtorch_downloads"
+  cd "$PARENT_DIR/libtorch_downloads"
 
   wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip
   unzip libtorch-shared-with-deps-*.zip
 
-  mv libtorch ../libtorch
+  mv libtorch "$PARENT_DIR/libtorch"
 
-  cd ..
-  rm -rf libtorch_downloads
+  cd "$PARENT_DIR"
+  rm -rf "$PARENT_DIR/libtorch_downloads"
   echo "Done Downloading libtorch"
 else
   echo "libtorch already exists, skip downloading."
@@ -26,16 +30,14 @@ fi
 # make sure cmake in PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# back_to HPML_lab2
-cd HPML_lab2
-
-
+# ensure cmake installed (user)
 python3 -m pip install --user cmake
-
 cmake --version
 
 echo "Start building C++ app..."
 
+# --- Build in repo root ---
+cd "$ROOT_DIR"
 rm -rf build
 mkdir build
 cd build
