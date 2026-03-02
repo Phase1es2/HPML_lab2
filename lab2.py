@@ -53,7 +53,7 @@ def main():
         best_work, best_time = find_best_work(use_cuda)
     else:
         device = torch.device("cuda" if use_cuda else "cpu")
-        data_set = get_train_dataset()
+        data_set = get_train_dataset(args.data_path)
         train_loader = DataLoader(
             data_set, batch_size=args.batch_size, shuffle=True,
             num_workers=args.num_workers, pin_memory=True if use_cuda else False

@@ -28,7 +28,7 @@ def get_parser():
     parser.add_argument("--weight_decay", type=float, default=5e-4, help="weight decay")
     parser.add_argument("--momentum", type=float, default=0.9, help="momentum")
     parser.add_argument("--cuda", action="store_true", help="use cuda")
-    parser.add_argument("--data_path", type=str , help="data path")
+    parser.add_argument("--data_path", type=str, default="./data", help="data path")
     parser.add_argument("--num_workers", type=int, default=0, help="number of data loading workers")
     parser.add_argument("--best_worker", action="store_true", help="call find best work function")
     parser.add_argument("--no_batch", action="store_true", help="do not use a batch norm during training")

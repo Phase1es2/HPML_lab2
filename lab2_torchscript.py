@@ -27,7 +27,7 @@ def main():
         print(f"✓ Evaluation device: {device}")
         print("=" * 60)
 
-        test_data_set = get_test_dataset()
+        test_data_set = get_test_dataset(args.data_path)
         test_loader = DataLoader(
             test_data_set, batch_size=args.batch_size, shuffle=False,
             num_workers=args.num_workers, pin_memory=True if use_cuda else False
@@ -61,7 +61,7 @@ def main():
         print(f"TorchScript latency on {'GPU' if use_cuda else 'CPU'}: {latency_ts:.2f} ms")
         print("Speedup: {:.2f}x".format(speedup))
     else:
-        data_set = get_train_dataset()
+        data_set = get_train_dataset(args.data_path)
         train_loader = DataLoader(
             data_set, batch_size=args.batch_size, shuffle=True,
             num_workers=args.num_workers, pin_memory=True if use_cuda else False
