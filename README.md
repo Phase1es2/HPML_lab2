@@ -437,11 +437,10 @@ uv run lab2_torchscript.py --eval
 
 ```bash
 # use uv
-uv run lab2_torchscript.py --latency
+uv run lab2_torchscript.py --latency --cuda
 
 # use bash
-./run_lab2_b.sh --latency
-```
+./run_lab2_b.sh --latency --cuda
 
 ### CPU
 
