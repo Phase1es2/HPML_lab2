@@ -1,7 +1,180 @@
 # HPML Lab 2 (PyTorch + TorchScript)
 
-This repository contains **Part A: Training & Profiling** and **Part B: TorchScript Model Optimization**.  
+This repository contains:
+
+- **Part A: Training & Profiling** (PyTorch training + timing/profiling experiments)
+- **Part B: Model Optimization with TorchScript** (TorchScript conversion + evaluation + latency benchmark)
+- **Extra Credit**: Load TorchScript model from C++ (`load_model.cpp`)
+
 I use **`uv`** to manage the Python environment for reproducibility, portability, and ease of use.
+
+---
+
+## Project Structure
+
+```text
+.
+├── CMakeLists.txt
+├── README.md
+├── lab2.py
+├── lab2_data.py
+├── lab2_torchscript.py
+├── load_model.cpp
+├── model.py
+├── model_jit.py
+├── pyproject.toml
+├── run_cpp_load.sh
+├── run_lab2_a.sh
+├── run_lab2_b.sh
+├── train.py
+├── utils.py
+└── uv.lock
+```
+
+---
+
+## File/Module Overview
+
+### `lab2.py` (Part A entrypoint / main)
+**This is the main program for Part A.** It parses CLI arguments via `get_parser()` and then:
+
+- Selects device: CPU vs GPU (`--cuda` + `torch.cuda.is_available()`)
+- If `--best_worker` is set, runs `find_best_work(use_cuda)` to search the best dataloader worker count
+- Otherwise:
+  - Builds CIFAR-10 training dataset and dataloader
+  - Builds model: `ResNet18` **or** `ResNet18NoBN` (when `--no_batch`)
+  - Creates optimizer via `set_optimizer(...)` (based on `--opt`, `--lr`, `--momentum`, `--weight_decay`, `--nesterov`)
+  - Runs epoch loop calling `train_one_epoch(...)`
+  - Prints per-epoch metrics:
+    - `avg_loss`, `avg_acc`
+    - `total_data_time`, `total_train_time`, `total_running_time`
+
+This is the core logic flow (simplified from your `main()`):
+
+```python
+def main():
+    args = get_parser().parse_args()
+    use_cuda = args.cuda and torch.cuda.is_available()
+
+    if args.best_worker:
+        best_work, best_time = find_best_work(use_cuda)
+    else:
+        device = torch.device("cuda" if use_cuda else "cpu")
+
+        data_set = get_train_dataset()
+        train_loader = DataLoader(
+            data_set,
+            batch_size=args.batch_size,
+            shuffle=True,
+            num_workers=args.num_workers,
+            pin_memory=True if use_cuda else False,
+        )
+
+        model = ResNet18NoBN(num_classes=10).to(device) if args.no_batch else ResNet18(num_classes=10).to(device)
+
+        summary(model, input_size=(3, 32, 32), device=str(device))
+        criterion = nn.CrossEntropyLoss()
+        optimizer = set_optimizer(model, args.opt, args.lr, args.momentum, args.weight_decay, args.nesterov)
+
+        print(f"\nBegin Training, Optimizer {optimizer}, Device {device}")
+        print(f"{'Epoch':<6} | {'Loss':<8} | {'Acc (%)':<8} | {'Data Time':<10} | {'Train Time':<10} | {'Running Time':<10}")
+        print("-" * 60)
+
+        for epoch in range(1, args.epochs + 1):
+            loss, acc, d_time, t_time, r_time = train_one_epoch(model, train_loader, optimizer, criterion, device)
+            print(f"{epoch:<6} | " f"{loss:<10.4f} | " f"{acc:<10.2f} | " f"{d_time:<12.4f} | " f"{t_time:<12.4f} | " f"{r_time:<12.4f}")
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+### `lab2_torchscript.py` (Part B entrypoint / main)
+**This is the main program for Part B.** It uses:
+
+```python
+MODEL_PATH = "best_model_jit.pt"
+```
+
+It supports three main modes:
+
+1) **Evaluation (`--eval`)**  
+Loads TorchScript model from `MODEL_PATH` and evaluates on CIFAR-10 test set, printing Top-1 accuracy.
+
+2) **Latency benchmark (`--latency`)**  
+Benchmarks latency for:
+- Original PyTorch model (`ResNet18`)
+- TorchScript model loaded from `MODEL_PATH`
+Then prints latency and speedup.
+
+3) **Training + TorchScript conversion (default)**  
+Trains a TorchScript-compatible model (`ResNet18JIT` / `ResNet18NoBNJIT`) and **whenever a new best accuracy is reached**, converts and saves the model to `MODEL_PATH` using either:
+- `--converting scripting`  (default)
+- `--converting tracing`
+
+It also prints the TorchScript graph (once) during conversion:
+- scripting: `print(scripted.code)`
+- tracing: `print(traced.graph)` / `print(traced.inlined_graph)`
+
+---
+
+### `lab2_data.py`
+Provides dataset helpers for CIFAR-10:
+- `get_train_dataset()` for CIFAR-10 training set
+- `get_test_dataset()` for CIFAR-10 test set
+
+---
+
+### `model.py`
+Defines PyTorch ResNet models for Part A:
+- `ResNet18`
+- `ResNet18NoBN` (ResNet18 without BatchNorm)
+
+---
+
+### `model_jit.py`
+Defines TorchScript-friendly ResNet models for Part B:
+- `ResNet18JIT`
+- `ResNet18NoBNJIT`
+
+(These are typically small modifications to make the architecture compatible with `torch.jit.script` / `torch.jit.trace`.)
+
+---
+
+### `train.py`
+Implements training utilities such as:
+- `train_one_epoch(...)`  
+Runs one epoch and reports metrics used by `lab2.py` and `lab2_torchscript.py`:
+- `avg_loss`, `avg_acc`
+- `total_data_time`, `total_train_time`, `total_running_time`
+
+---
+
+### `utils.py`
+Helper functions, including:
+
+- `get_parser()`  
+Defines and returns the CLI argument parser.
+
+- `set_optimizer(model, opt, lr, momentum, weight_decay, nesterov)`  
+Creates optimizer based on user input (`--opt`).
+
+- `find_best_work(use_cuda: bool)`  
+Searches for the best `num_workers` setting for data loading in the current environment.
+
+- `plot_best_work_results(...)`  
+Plots the `best_worker` results.
+
+- `benchmark_latency(model, device)`  
+Measures inference latency (used by Part B `--latency`).
+
+---
+
+### `load_model.cpp`, `CMakeLists.txt`, `run_cpp_load.sh` (Extra Credit)
+- `load_model.cpp`: C++ loader for TorchScript model
+- `CMakeLists.txt`: build config
+- `run_cpp_load.sh`: build & run helper script
 
 ---
 
