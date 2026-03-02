@@ -1,5 +1,3 @@
-# from einops import rearrange
-# from jaxtyping import Float
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
